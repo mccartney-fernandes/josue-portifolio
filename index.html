@@ -134,13 +134,41 @@
 <body class="bg-bg text-text antialiased overflow-x-hidden">
 
     <nav class="fixed w-full z-50 top-0 transition-all duration-300 py-6 bg-bg/80 backdrop-blur-md">
-        <div class="max-w-7xl mx-auto px-6 flex justify-center md:justify-start md:pl-20">
-            <ul class="flex space-x-6 md:space-x-12 text-sm md:text-base font-normal text-gray-400">
+        <div class="max-w-7xl mx-auto px-6 flex justify-end md:justify-start md:pl-20 items-center">
+
+            <!-- Mobile Menu Button -->
+            <button id="mobile-menu-btn" class="md:hidden text-navy focus:outline-none p-2">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16">
+                    </path>
+                </svg>
+            </button>
+
+            <!-- Desktop Menu -->
+            <ul class="hidden md:flex space-x-12 text-base font-normal text-gray-400">
                 <li><a href="#" class="hover:text-navy transition-colors">Inicio</a></li>
                 <li><a href="#sobre" class="hover:text-navy transition-colors">Quem sou eu?</a></li>
                 <li><a href="#portfolio" class="hover:text-navy transition-colors">Meus trabalhos</a></li>
-                <li><a href="#como-funciona" class="hover:text-navy transition-colors">Serviços</a></li>
-                <li><a href="#acordos" class="hover:text-navy transition-colors">Planos</a></li>
+                <li><a href="#fluxo" class="hover:text-navy transition-colors">fluxo de trabalho</a></li>
+                <li><a href="#como-funciona" class="hover:text-navy transition-colors">Funcionamento</a></li>
+                <li><a href="#acordos" class="hover:text-navy transition-colors">Acordos</a></li>
+            </ul>
+        </div>
+
+        <!-- Mobile Menu -->
+        <div id="mobile-menu"
+            class="hidden md:hidden absolute top-full left-0 w-full bg-white/95 backdrop-blur-md shadow-lg border-t border-gray-100 transition-all duration-300">
+            <ul class="flex flex-col py-6 px-6 space-y-4 text-center text-lg font-medium text-navy">
+                <li><a href="#" class="block hover:text-gray-500 transition-colors mobile-link">Inicio</a></li>
+                <li><a href="#sobre" class="block hover:text-gray-500 transition-colors mobile-link">Quem sou eu?</a>
+                </li>
+                <li><a href="#portfolio" class="block hover:text-gray-500 transition-colors mobile-link">Meus
+                        trabalhos</a></li>
+                <li><a href="#fluxo" class="block hover:text-gray-500 transition-colors mobile-link">fluxo de
+                        trabalho</a></li>
+                <li><a href="#como-funciona"
+                        class="block hover:text-gray-500 transition-colors mobile-link">Funcionamento</a></li>
+                <li><a href="#acordos" class="block hover:text-gray-500 transition-colors mobile-link">Acordos</a></li>
             </ul>
         </div>
     </nav>
@@ -367,7 +395,7 @@
         </div>
     </section>
 
-    <section class="py-24 bg-white relative">
+    <section id="fluxo" class="py-24 bg-white relative">
         <div class="max-w-5xl mx-auto px-6">
             <h2 class="text-4xl font-bold text-navy mb-20" data-aos="fade-down">Processo de Trabalho</h2>
             <div id="timeline-wrapper" class="relative max-w-4xl mx-auto">
@@ -542,7 +570,7 @@
     </section>
 
     <footer class="bg-white py-10 border-t border-gray-100 text-center text-gray-400">
-        <p>© 2026 Ricardo Oliveira. Todos os direitos reservados.</p>
+        <p>© 2026 Ricardo Oliveira. Todos os direitos reservados, created by MIHACSOFT.</p>
     </footer>
 
     <a href="https://wa.me/5587991494604" target="_blank"
@@ -627,6 +655,31 @@
                 this.currentTime = 0;
             });
         });
+
+        // Mobile Menu Logic
+        const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const mobileLinks = document.querySelectorAll('.mobile-link');
+
+        if (mobileMenuBtn && mobileMenu) {
+            mobileMenuBtn.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+
+            // Close menu when clicking a link
+            mobileLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    mobileMenu.classList.add('hidden');
+                });
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!mobileMenu.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
+                    mobileMenu.classList.add('hidden');
+                }
+            });
+        }
     </script>
 </body>
 
