@@ -23,6 +23,9 @@
     <meta name="twitter:image" content="https://ricardooliveira.mihacsoft.com.br/image_1.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Swiper.js -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&display=swap"
         rel="stylesheet">
@@ -139,113 +142,156 @@
             scrollbar-width: none;
         }
 
-        /* 3D CAROUSEL STYLES */
-        .carousel-view {
-            perspective: 1200px;
-            overflow: hidden;
+        /* SWIPER VIDEO CAROUSEL */
+
+        /* Window = "phone screen" on desktop: clips side cards at its edges */
+        .video-swiper-window {
+            margin: 0 auto;
             position: relative;
-            padding: 40px 0 120px 0;
-            /* More space for the shifted side cards */
+            overflow: hidden;
         }
 
-        .carousel-container {
-            display: flex;
-            align-items: center;
-            justify-content: flex-start;
-            transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-            transform-style: preserve-3d;
-            width: max-content;
-            will-change: transform;
+        /* Swiper overflows its window so adjacent cards peek from edges */
+        .video-swiper {
+            width: 100%;
+            padding: 40px 0 80px !important;
+            overflow: visible !important;
         }
 
-        .video-card {
-            min-width: 280px;
-            max-width: 280px;
-            height: 500px;
-            /* 9:16 aspect */
-            margin: 0 -100px;
-            /* Overlap to match drawing */
+        /* clip at section level */
+        #portfolio {
+            overflow-x: hidden;
+        }
+
+        /* Mobile: fixed 9:16 portrait size */
+        .video-swiper .swiper-slide {
+            width: 280px;
+            height: 498px;
             border-radius: 24px;
             overflow: hidden;
-            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
             position: relative;
-            transform: scale(0.7) translateZ(-150px) translateY(80px);
-            opacity: 0.2;
-            filter: blur(8px);
-            /* Simplified: removed grayscale as it's heavy with blur */
-            z-index: 1;
             will-change: transform, opacity;
             backface-visibility: hidden;
-            mask-image: -webkit-radial-gradient(white, black);
-            -webkit-mask-image: -webkit-radial-gradient(white, black);
-            /* Fix for border-radius + overflow on some browsers */
+            transition: opacity 0.4s ease;
         }
 
+        /* Desktop: narrow window replicates mobile proportions
+           450px window / 320px card → 65px peek each side ≈ 20% (same as mobile) */
         @media (min-width: 768px) {
-            .video-card {
-                min-width: 380px;
-                max-width: 380px;
-                height: 475px;
-                margin: 0 20px;
-                transform: scale(0.85) translateZ(-50px);
+            .video-swiper-window {
+                max-width: 450px;
+            }
+
+            .video-swiper .swiper-slide {
+                width: 320px;
+                height: 569px;
+                /* 320 × 16/9 = 568.9 → exact 9:16, no cropping */
             }
         }
 
-        .video-card.active {
-            transform: scale(1) translateZ(150px) translateY(0);
-            opacity: 1;
-            filter: blur(0) grayscale(0);
-            z-index: 30;
-        }
-
-        /* Left side card tilt */
-        .video-card.side-left {
-            opacity: 0.7;
-            filter: blur(2px);
-            z-index: 15;
-            transform: scale(0.85) translateZ(0) translateY(60px) rotateY(15deg);
-        }
-
-        /* Right side card tilt */
-        .video-card.side-right {
-            opacity: 0.7;
-            filter: blur(2px);
-            z-index: 15;
-            transform: scale(0.85) translateZ(0) translateY(60px) rotateY(-15deg);
-        }
-
-        @media (min-width: 768px) {
-
-            .video-card.side-left,
-            .video-card.side-right {
-                transform: scale(0.9) translateZ(0) translateY(0) rotateY(0);
-                opacity: 0.65;
-                filter: blur(2px) grayscale(30%);
-                /* Grayscale only on desktop where GPU is stronger */
-            }
-        }
-
-        .video-card video {
+        .video-swiper .swiper-slide video {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            /* video is 9:16, card is 9:16 → no cropping */
+            display: block;
         }
 
-        .video-card .card-content {
+        /* Side cards: dimmed and visually behind center */
+        .video-swiper .swiper-slide:not(.swiper-slide-active) {
+            opacity: 0.4;
+        }
+
+        /* Card overlay content */
+        .slide-card-content {
             position: absolute;
             bottom: 0;
             left: 0;
             right: 0;
-            padding: 30px;
-            background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+            padding: 28px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, transparent 100%);
             color: white;
-            transition: opacity 0.4s ease;
+            opacity: 0;
+            transition: opacity 0.35s ease;
+            pointer-events: none;
         }
 
-        .video-card:not(.active) .card-content,
-        .video-card:not(.active) .play-overlay {
-            opacity: 0 !important;
+        .swiper-slide-active .slide-card-content {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Play/Pause overlay */
+        .play-overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+
+        .swiper-slide:not(.swiper-slide-active) .play-overlay {
+            opacity: 0;
             pointer-events: none;
+        }
+
+        .play-btn-circle {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Swiper nav buttons — ocultas no mobile, visíveis no desktop */
+        .video-swiper .swiper-button-next,
+        .video-swiper .swiper-button-prev {
+            display: none;
+            /* hidden on mobile by default */
+        }
+
+        @media (min-width: 768px) {
+
+            .video-swiper .swiper-button-next,
+            .video-swiper .swiper-button-prev {
+                display: flex;
+                width: 48px;
+                height: 48px;
+                background: rgba(255, 255, 255, 0.85);
+                backdrop-filter: blur(8px);
+                border-radius: 50%;
+                color: #0A1A3B;
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+                transition: background 0.2s ease, transform 0.2s ease;
+            }
+
+            .video-swiper .swiper-button-next:hover,
+            .video-swiper .swiper-button-prev:hover {
+                background: #fff;
+                transform: scale(1.08);
+            }
+
+            .video-swiper .swiper-button-next::after,
+            .video-swiper .swiper-button-prev::after {
+                font-size: 16px;
+                font-weight: 700;
+            }
+        }
+
+        .video-swiper .swiper-pagination-bullet {
+            background: #0A1A3B;
+        }
+
+        .video-swiper .swiper-pagination-bullet-active {
+            background: #0A1A3B;
+            transform: scale(1.3);
         }
     </style>
 </head>
@@ -390,33 +436,23 @@
     <!-- Video Showcase Section -->
     <section id="portfolio" class="py-24 bg-bg overflow-hidden">
         <div class="max-w-full mx-auto">
-            <h2 class="text-2xl md:text-5xl font-bold text-navy text-center mb-16 max-w-4xl mx-auto leading-tight"
+            <h2 class="text-2xl md:text-5xl font-bold text-navy text-center mb-16 max-w-4xl mx-auto leading-tight px-6"
                 data-aos="fade-up">
                 Aqui você vê o que eu faço e por que faz diferença
             </h2>
 
-            <div class="carousel-view">
-                <div id="video-carousel" class="carousel-container">
-                    <!-- Cards will be populated and cloned by JS -->
+            <!-- Swiper Carousel -->
+            <div class="video-swiper-window">
+                <div class="swiper video-swiper">
+                    <div class="swiper-wrapper" id="video-swiper-wrapper">
+                        <!-- Slides populated by JS -->
+                    </div>
+                    <div class="swiper-pagination"></div>
+                    <div class="swiper-button-prev"></div>
+                    <div class="swiper-button-next"></div>
                 </div>
-
-                <!-- Navigation Buttons -->
-                <button id="prev-btn"
-                    class="hidden md:flex absolute left-4 md:left-20 top-1/2 -translate-y-1/2 z-30 bg-white/20 backdrop-blur-md p-4 rounded-full text-navy border border-navy/10 hover:bg-white transition-all duration-300">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                    </svg>
-                </button>
-                <button id="next-btn"
-                    class="hidden md:flex absolute right-4 md:right-20 top-1/2 -translate-y-1/2 z-30 bg-white/20 backdrop-blur-md p-4 rounded-full text-navy border border-navy/10 hover:bg-white transition-all duration-300">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-                    </svg>
-                </button>
             </div>
-
         </div>
-    </section>
     </section>
 
     <section id="fluxo" class="py-24 bg-white relative">
@@ -611,262 +647,132 @@
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
         AOS.init();
+
+        // Timeline animation
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.classList.add('animate-start');
-                }
+                if (entry.isIntersecting) entry.target.classList.add('animate-start');
             });
         }, { threshold: 0.5 });
         const timelineWrapper = document.getElementById('timeline-wrapper');
-        if (timelineWrapper) {
-            observer.observe(timelineWrapper);
-        }
+        if (timelineWrapper) observer.observe(timelineWrapper);
 
+        // ─── VIDEO DATA ────────────────────────────────────────────────────────────
         const videoData = [
-            {
-                title: "Comunicação",
-                company: "Ricardo Oliveira Videomaker",
-                src: "https://s3.ricardofilms.com.br/ricardo-films/videos/VIDEOREELS_1.mp4"
-            },
-            {
-                title: "Liderança & Confiança",
-                company: "Ricardo Oliveira Videomaker",
-                src: "https://s3.ricardofilms.com.br/ricardo-films/videos/VIDEOREELS_2.mp4"
-            },
-            {
-                title: "Resultado & Performance",
-                company: "Ricardo Oliveira Videomaker",
-                src: "https://s3.ricardofilms.com.br/ricardo-films/videos/VIDEOREELS_3.mp4"
-            },
-            {
-                title: "Institucional",
-                company: "Ricardo Oliveira Videomaker",
-                src: "https://s3.ricardofilms.com.br/ricardo-films/videos/VIDEOREELS.mp4"
-            }
+            { title: "Comunicação", src: "https://s3.ricardofilms.com.br/ricardo-films/videos/VIDEOREELS_1.mp4" },
+            { title: "Liderança & Confiança", src: "https://s3.ricardofilms.com.br/ricardo-films/videos/VIDEOREELS_2.mp4" },
+            { title: "Resultado & Performance", src: "https://s3.ricardofilms.com.br/ricardo-films/videos/VIDEOREELS_3.mp4" },
+            { title: "Institucional", src: "https://s3.ricardofilms.com.br/ricardo-films/videos/VIDEOREELS.mp4" }
         ];
 
-        const carouselView = document.querySelector('.carousel-view');
-        const carousel = document.getElementById('video-carousel');
-        let currentIndex = videoData.length; // Start at the first element of the real data
+        const stars = Array(5).fill('<svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>').join('');
 
-        // Generate Cards with clones for infinite effect
-        // Prepended clones | Real items | Appended clones
-        const fullData = [...videoData, ...videoData, ...videoData];
-
-        function createCard(data, index) {
-            return `
-                <div class="video-card" data-index="${index}">
-                    <video playsinline loop>
-                        <source src="${data.src}" type="video/mp4">
-                    </video>
-                    <div class="play-overlay absolute inset-0 bg-black/20 flex items-center justify-center cursor-pointer transition-opacity duration-300">
-                        <div class="status-icon-container w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/50">
-                            <!-- Play Icon -->
-                            <svg class="play-icon w-8 h-8 text-white fill-white ml-1" viewBox="0 0 24 24">
-                                <path d="M8 5v14l11-7z" />
-                            </svg>
-                            <!-- Pause Icon -->
-                            <svg class="pause-icon w-8 h-8 text-white fill-white hidden" viewBox="0 0 24 24">
-                                <path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z" />
-                            </svg>
-                        </div>
-                    </div>
-                    <div class="card-content">
-                        <h3 class="text-xl font-bold mb-1">${data.title}</h3>
-                        <p class="text-white/70 text-sm mb-2">${data.company}</p>
-                        <div class="flex gap-1 text-yellow-400">
-                            ${Array(5).fill('<svg class="w-4 h-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>').join('')}
-                        </div>
+        // Build slides (no DOM cloning — Swiper handles loop internally)
+        const wrapper = document.getElementById('video-swiper-wrapper');
+        videoData.forEach((data) => {
+            const slide = document.createElement('div');
+            slide.className = 'swiper-slide';
+            slide.innerHTML = `
+                <video playsinline loop preload="metadata" src="${data.src}"></video>
+                <div class="play-overlay">
+                    <div class="play-btn-circle">
+                        <svg class="play-icon" style="width:32px;height:32px;fill:white;margin-left:4px" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        <svg class="pause-icon" style="width:32px;height:32px;fill:white;display:none" viewBox="0 0 24 24"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>
                     </div>
                 </div>
+                <div class="slide-card-content">
+                    <h3 style="font-size:1.2rem;font-weight:700;margin-bottom:4px">${data.title}</h3>
+                    <p style="color:rgba(255,255,255,0.7);font-size:.85rem;margin-bottom:8px">Ricardo Oliveira Videomaker</p>
+                    <div style="display:flex;gap:4px;color:#facc15">${stars}</div>
+                </div>
             `;
-        }
+            wrapper.appendChild(slide);
+        });
 
-        carousel.innerHTML = fullData.map((data, i) => createCard(data, i % videoData.length)).join('');
-
-        const cards = document.querySelectorAll('.video-card');
-        let isMoving = false;
-        let cachedCardWidth = 0;
-
-        function cacheDimensions() {
-            if (cards.length > 0) {
-                const style = window.getComputedStyle(cards[0]);
-                const marginLeft = parseFloat(style.marginLeft);
-                const marginRight = parseFloat(style.marginRight);
-                cachedCardWidth = cards[0].offsetWidth + marginLeft + marginRight;
+        // ─── SWIPER INIT ───────────────────────────────────────────────────────────
+        const swiper = new Swiper('.video-swiper', {
+            effect: 'coverflow',
+            grabCursor: true,
+            centeredSlides: true,
+            slidesPerView: 'auto', // same behaviour on all screen sizes
+            loop: true,
+            speed: 500,
+            observer: true,
+            observeParents: true,
+            coverflowEffect: {
+                rotate: 0,
+                stretch: 0,
+                depth: 120,
+                modifier: 2,
+                slideShadows: false
+            },
+            pagination: {
+                el: '.swiper-pagination',
+                clickable: true
+            },
+            navigation: {
+                nextEl: '.swiper-button-next',
+                prevEl: '.swiper-button-prev'
+            },
+            on: {
+                init(sw) {
+                    requestAnimationFrame(() => sw.update());
+                },
+                slideChange: stopAllVideos
             }
-        }
+        });
 
-        function updateCarousel(instant = false) {
-            if (!cachedCardWidth) cacheDimensions();
-            const viewWidth = carouselView.offsetWidth;
-            const centerOffset = (viewWidth / 2) - (cachedCardWidth / 2);
-            const moveX = centerOffset - (currentIndex * cachedCardWidth);
-
-            if (instant) carousel.style.transition = 'none';
-            else carousel.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
-
-            carousel.style.transform = `translateX(${moveX}px)`;
-
-            cards.forEach((card, i) => {
-                card.classList.remove('active', 'side-left', 'side-right');
-                const video = card.querySelector('video');
-
-                if (i === currentIndex) {
-                    card.classList.add('active');
-                    // No automatic play on scroll/center
-                } else {
-                    video.pause();
-                    if (i === currentIndex - 1) {
-                        card.classList.add('side-left');
-                    } else if (i === currentIndex + 1) {
-                        card.classList.add('side-right');
-                    }
-                }
+        // ─── VIDEO PLAY / PAUSE LOGIC ─────────────────────────────────────────────
+        function stopAllVideos() {
+            document.querySelectorAll('.video-swiper video').forEach(v => {
+                v.pause();
+                v.currentTime = 0;
+            });
+            // Reset all overlay icons to play
+            document.querySelectorAll('.video-swiper .play-overlay').forEach(o => {
+                o.style.opacity = '';
+                o.querySelector('.play-icon').style.display = '';
+                o.querySelector('.pause-icon').style.display = 'none';
             });
         }
 
-        function handleInfinite() {
-            if (currentIndex < videoData.length) {
-                currentIndex += videoData.length;
-                updateCarousel(true);
-            } else if (currentIndex >= videoData.length * 2) {
-                currentIndex -= videoData.length;
-                updateCarousel(true);
+        // Delegate click on each slide
+        document.querySelector('.video-swiper').addEventListener('click', (e) => {
+            const slide = e.target.closest('.swiper-slide');
+            if (!slide) return;
+
+            // If not the active slide, let Swiper navigate (don't intercept)
+            if (!slide.classList.contains('swiper-slide-active')) return;
+
+            const video = slide.querySelector('video');
+            const overlay = slide.querySelector('.play-overlay');
+            const playIcon = slide.querySelector('.play-icon');
+            const pauseIcon = slide.querySelector('.pause-icon');
+
+            if (video.paused) {
+                video.muted = false;
+                video.play().catch(() => { video.muted = true; video.play(); });
+                overlay.style.opacity = '0';
+                overlay.style.pointerEvents = 'none';
+                playIcon.style.display = 'none';
+                pauseIcon.style.display = '';
+            } else {
+                video.pause();
+                overlay.style.opacity = '1';
+                overlay.style.pointerEvents = 'auto';
+                playIcon.style.display = '';
+                pauseIcon.style.display = 'none';
             }
-        }
-
-        carousel.addEventListener('transitionend', () => {
-            isMoving = false;
-            handleInfinite();
         });
 
-        document.getElementById('next-btn').addEventListener('click', () => {
-            if (isMoving) return;
-            isMoving = true;
-            currentIndex++;
-            updateCarousel();
-        });
-
-        document.getElementById('prev-btn').addEventListener('click', () => {
-            if (isMoving) return;
-            isMoving = true;
-            currentIndex--;
-            updateCarousel();
-        });
-
-        // Click on card to center and play
-        cards.forEach((card, i) => {
-            card.addEventListener('click', () => {
-                const video = card.querySelector('video');
-                const overlay = card.querySelector('.play-overlay');
-                const playIcon = card.querySelector('.play-icon');
-                const pauseIcon = card.querySelector('.pause-icon');
-
-                if (i === currentIndex) {
-                    if (video.paused) {
-                        video.muted = false;
-                        video.play();
-                        overlay.style.opacity = '0';
-                        overlay.style.pointerEvents = 'none';
-                    } else {
-                        video.pause();
-                        overlay.style.opacity = '1';
-                        overlay.style.pointerEvents = 'auto';
-                        playIcon.classList.add('hidden');
-                        pauseIcon.classList.remove('hidden');
-                    }
-                } else {
-                    // Reset others icons when switching
-                    cards.forEach(c => {
-                        const v = c.querySelector('video');
-                        const o = c.querySelector('.play-overlay');
-                        const pl = c.querySelector('.play-icon');
-                        const pa = c.querySelector('.pause-icon');
-                        v.pause();
-                        o.style.opacity = '1';
-                        o.style.pointerEvents = 'auto';
-                        pl.classList.remove('hidden');
-                        pa.classList.add('hidden');
-                    });
-
-                    currentIndex = i;
-                    updateCarousel();
-                }
-            });
-        });
-
-        // Touch Swipe Logic
-        let touchStartX = 0;
-        let touchEndX = 0;
-        const swipeThreshold = 50;
-
-        carouselView.addEventListener('touchstart', (e) => {
-            touchStartX = e.changedTouches[0].screenX;
-        }, { passive: true });
-
-        carouselView.addEventListener('touchmove', (e) => {
-            // Prevent vertical scroll while swiping carousel if needed
-            // e.preventDefault(); 
-        }, { passive: true });
-
-        carouselView.addEventListener('touchend', (e) => {
-            touchEndX = e.changedTouches[0].screenX;
-            handleSwipe();
-        }, { passive: true });
-
-        function handleSwipe() {
-            const diff = touchEndX - touchStartX;
-            if (Math.abs(diff) > swipeThreshold) {
-                if (diff > 0) {
-                    // Swipe Right (Prev)
-                    if (!isMoving) {
-                        isMoving = true;
-                        currentIndex--;
-                        updateCarousel();
-                    }
-                } else {
-                    // Swipe Left (Next)
-                    if (!isMoving) {
-                        isMoving = true;
-                        currentIndex++;
-                        updateCarousel();
-                    }
-                }
-            }
-        }
-
-        // Initialize
-        window.addEventListener('load', () => {
-            cacheDimensions();
-            updateCarousel(true);
-        });
-
-        // Handle resize
-        window.addEventListener('resize', () => {
-            cacheDimensions();
-            updateCarousel(true);
-        });
-
-        // Mobile Menu Logic
+        // ─── MOBILE MENU ───────────────────────────────────────────────────────────
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
         const mobileMenu = document.getElementById('mobile-menu');
         const mobileLinks = document.querySelectorAll('.mobile-link');
 
         if (mobileMenuBtn && mobileMenu) {
-            mobileMenuBtn.addEventListener('click', () => {
-                mobileMenu.classList.toggle('hidden');
-            });
-
-            // Close menu when clicking a link
-            mobileLinks.forEach(link => {
-                link.addEventListener('click', () => {
-                    mobileMenu.classList.add('hidden');
-                });
-            });
-
-            // Close menu when clicking outside
+            mobileMenuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+            mobileLinks.forEach(link => link.addEventListener('click', () => mobileMenu.classList.add('hidden')));
             document.addEventListener('click', (e) => {
                 if (!mobileMenu.contains(e.target) && !mobileMenuBtn.contains(e.target)) {
                     mobileMenu.classList.add('hidden');
