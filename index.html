@@ -155,6 +155,7 @@
             transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
             transform-style: preserve-3d;
             width: max-content;
+            will-change: transform;
         }
 
         .video-card {
@@ -170,8 +171,14 @@
             position: relative;
             transform: scale(0.7) translateZ(-150px) translateY(80px);
             opacity: 0.2;
-            filter: blur(8px) grayscale(100%);
+            filter: blur(8px);
+            /* Simplified: removed grayscale as it's heavy with blur */
             z-index: 1;
+            will-change: transform, opacity;
+            backface-visibility: hidden;
+            mask-image: -webkit-radial-gradient(white, black);
+            -webkit-mask-image: -webkit-radial-gradient(white, black);
+            /* Fix for border-radius + overflow on some browsers */
         }
 
         @media (min-width: 768px) {
@@ -194,7 +201,7 @@
         /* Left side card tilt */
         .video-card.side-left {
             opacity: 0.7;
-            filter: blur(2px) grayscale(20%);
+            filter: blur(2px);
             z-index: 15;
             transform: scale(0.85) translateZ(0) translateY(60px) rotateY(15deg);
         }
@@ -202,7 +209,7 @@
         /* Right side card tilt */
         .video-card.side-right {
             opacity: 0.7;
-            filter: blur(2px) grayscale(20%);
+            filter: blur(2px);
             z-index: 15;
             transform: scale(0.85) translateZ(0) translateY(60px) rotateY(-15deg);
         }
@@ -214,6 +221,7 @@
                 transform: scale(0.9) translateZ(0) translateY(0) rotateY(0);
                 opacity: 0.65;
                 filter: blur(2px) grayscale(30%);
+                /* Grayscale only on desktop where GPU is stronger */
             }
         }
 
@@ -679,15 +687,22 @@
 
         const cards = document.querySelectorAll('.video-card');
         let isMoving = false;
+        let cachedCardWidth = 0;
+
+        function cacheDimensions() {
+            if (cards.length > 0) {
+                const style = window.getComputedStyle(cards[0]);
+                const marginLeft = parseFloat(style.marginLeft);
+                const marginRight = parseFloat(style.marginRight);
+                cachedCardWidth = cards[0].offsetWidth + marginLeft + marginRight;
+            }
+        }
 
         function updateCarousel(instant = false) {
+            if (!cachedCardWidth) cacheDimensions();
             const viewWidth = carouselView.offsetWidth;
-            const style = window.getComputedStyle(cards[0]);
-            const marginLeft = parseFloat(style.marginLeft);
-            const marginRight = parseFloat(style.marginRight);
-            const cardWidth = cards[0].offsetWidth + marginLeft + marginRight;
-            const centerOffset = (viewWidth / 2) - (cardWidth / 2);
-            const moveX = centerOffset - (currentIndex * cardWidth);
+            const centerOffset = (viewWidth / 2) - (cachedCardWidth / 2);
+            const moveX = centerOffset - (currentIndex * cachedCardWidth);
 
             if (instant) carousel.style.transition = 'none';
             else carousel.style.transition = 'transform 0.6s cubic-bezier(0.23, 1, 0.32, 1)';
@@ -824,11 +839,15 @@
 
         // Initialize
         window.addEventListener('load', () => {
+            cacheDimensions();
             updateCarousel(true);
         });
 
         // Handle resize
-        window.addEventListener('resize', () => updateCarousel(true));
+        window.addEventListener('resize', () => {
+            cacheDimensions();
+            updateCarousel(true);
+        });
 
         // Mobile Menu Logic
         const mobileMenuBtn = document.getElementById('mobile-menu-btn');
